@@ -1,7 +1,11 @@
-const { StaleLockfileError } = require('./errors');
-const buildNpmLockfileGraph = require('./graph/buildNpmLockfileGraph');
+import { StaleLockfileError } from './errors';
+import { buildNpmLockfileGraph } from './graph/buildNpmLockfileGraph';
+import { DependencyNode } from './graph/createDependencyNode';
 
-const populateVersions = (dependency, installedVersions = new Map()) => {
+function populateVersions(
+  dependency: DependencyNode,
+  installedVersions = new Map()
+) {
   if (!installedVersions.has(dependency.name)) {
     installedVersions.set(dependency.name, new Set());
   }
@@ -10,15 +14,18 @@ const populateVersions = (dependency, installedVersions = new Map()) => {
 
   if (!versions.has(dependency.version)) {
     versions.add(dependency.version);
-    dependency.children.forEach(child => {
+    dependency.children.forEach((child) => {
       populateVersions(child, installedVersions);
     });
   }
 
   return installedVersions;
-};
+}
 
-function groupNpmDependencies(packageDependencies, lockfile) {
+export function groupNpmDependencies(
+  packageDependencies: Record<string, any>,
+  lockfile: Record<string, any>
+) {
   const graph = buildNpmLockfileGraph(lockfile);
 
   const versions = new Map();
@@ -35,5 +42,3 @@ function groupNpmDependencies(packageDependencies, lockfile) {
 
   return versions;
 }
-
-module.exports = groupNpmDependencies;
